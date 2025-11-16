@@ -1,0 +1,54 @@
+---
+# Playbook: Launch an EC2 instance in AWS using Ansible.
+# This playbook creates a single EC2 instance in a specified subnet
+# with a public IP, key pair, security group, and tags.
+
+- name: Launch EC2 Instance
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    # AWS region where the instance will be created
+    region: us-east-1
+
+    # Subnet ID where the EC2 instance will be launched
+    subnet_id: subnet-0ece462a153d150eb
+
+    # AMI ID for the instance (Amazon Linux 2 for us-east-1)
+    ami_id: ami-0cae6d6fe6048ca2c
+
+    # Instance type (t3.micro recommended for free-tier eligibility)
+    instance_type: t3.micro
+
+    # Name of the existing AWS key pair to enable SSH access
+    key_name: ansible-class
+
+  tasks:
+
+    # --------------------------------------------------------------------
+    # Launch an EC2 instance with a public IP in the specified subnet.
+    # Assigns tags and uses the default security group.
+    # --------------------------------------------------------------------
+    - name: Create EC2 instance
+      amazon.aws.ec2_instance:
+        region: "{{ region }}"
+        name: "ansible-ec2-instance"
+        key_name: "{{ key_name }}"
+        vpc_subnet_id: "{{ subnet_id }}"
+        instance_type: "{{ instance_type }}"
+        image_id: "{{ ami_id }}"
+        security_group: default
+        network:
+          assign_public_ip: true
+        tags:
+          Environment: Testing
+          Project: Ansible-Automation
+      register: ec2_details
+
+    # --------------------------------------------------------------------
+    # Display details of the created EC2 instance (ID, IP, state, etc.)
+    # --------------------------------------------------------------------
+    - name: Show EC2 instance details
+      debug:
+        var: ec2_details
