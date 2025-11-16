@@ -1,0 +1,39 @@
+---
+# Playbook: Create a VPC with Public & Private Subnets,
+# Internet Gateway, and a Public Route Table in us-east-1.
+
+- name: VPC + Subnets + IGW + Route Table Setup
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    region: us-east-1
+    vpc_cidr: 10.0.0.0/16
+    public_subnet_cidr: 10.0.1.0/24
+    private_subnet_cidr: 10.0.2.0/24
+
+  tasks:
+
+    # ---------------------------------------------------------
+    # Create the VPC where all resources will be provisioned.
+    # ---------------------------------------------------------
+    - name: Create VPC
+      amazon.aws.ec2_vpc_net:
+        name: mufasa-vpc
+        cidr_block: "{{ vpc_cidr }}"
+        region: "{{ region }}"
+        dns_support: true
+        dns_hostnames: true
+        state: present
+      register: vpc
+
+    # ---------------------------------------------------------
+    # Create the Public Subnet (mapped to a public IP).
+    # This subnet will have access to the Internet via IGW.
+    # ---------------------------------------------------------
+    - name: Create Public Subnet
+      amazon.aws.ec2_vpc_subnet:
+        region: "{{ region }}"
+        vpc_id: "{{ vpc.vpc.id }}"
+        cidr: "{{ public_sub
